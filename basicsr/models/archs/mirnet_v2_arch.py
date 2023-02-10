@@ -61,7 +61,7 @@ class ContextBlock(nn.Module):
 
         self.conv_mask = nn.Conv2d(n_feat, 1, kernel_size=1, bias=bias)
         self.softmax = nn.Softmax(dim=2)
-
+        # channel_add_conv = tf.keras.Sequential([tf.keras.layers.Conv2D(80, 1, 1, input_shape=[1,1,80]),tf.keras.layers.LeakyReLU(alpha=0.2) ,tf.keras.layers.Conv2D(80, 1, 1)]) ->
         self.channel_add_conv = nn.Sequential(
             nn.Conv2d(n_feat, n_feat, kernel_size=1, bias=bias),
             nn.LeakyReLU(0.2),
@@ -69,34 +69,37 @@ class ContextBlock(nn.Module):
         )
 
     def modeling(self, x):
-        batch, channel, height, width = x.size()
+        # x -> [N, C, H, W
+        batch, channel, height, width = x.size() # tf.shape(x) -> [  2,  80, 256, 256]
         input_x = x
         # [N, C, H * W]
-        input_x = input_x.view(batch, channel, height * width)
+        input_x = input_x.view(batch, channel, height * width) # input_x = tf.reshape(input_x, [batch, channel, height*width]) -> [    2,    80, 65536]
         # [N, 1, C, H * W]
-        input_x = input_x.unsqueeze(1)
+        input_x = input_x.unsqueeze(1) # input_x = tf.expand_dims(input_x, 1) -> [2, 1, 80, 65536]
         # [N, 1, H, W]
-        context_mask = self.conv_mask(x)
+        context_mask = self.conv_mask(x) # tf.keras.layers.Conv2D(1, 1)(tf.transpose(x, [0, 2, 3, 1])) -> [2, 256, 256, 1]
         # [N, 1, H * W]
-        context_mask = context_mask.view(batch, 1, height * width)
+        context_mask = context_mask.view(batch, 1, height * width) # tf.reshape(context_mask, [batch, height * width, 1])
         # [N, 1, H * W]
-        context_mask = self.softmax(context_mask)
+        context_mask = self.softmax(context_mask) # tf.keras.layers.Softmax(axis=1)(context_mask) -> [2, 65536, 1]
         # [N, 1, H * W, 1]
-        context_mask = context_mask.unsqueeze(3)
+        context_mask = context_mask.unsqueeze(3) # tf.expand_dims(context_mask, 1) -> [2, 1, 65536, 1]
         # [N, 1, C, 1]
-        context = torch.matmul(input_x, context_mask)
+        context = torch.matmul(input_x, context_mask) # tf.linalg.matmul(input_x, context_mask) -> [2, 1, 80, 1]
         # [N, C, 1, 1]
-        context = context.view(batch, channel, 1, 1)
+        context = context.view(batch, channel, 1, 1) # tf.reshape(context, [batch, channel, 1, 1]) -> [2, 80, 1, 1]
 
         return context
 
     def forward(self, x):
         # [N, C, 1, 1]
+        import pdb; pdb.set_trace()
         context = self.modeling(x)
-
+        # context = tf.transpose(context, [0, 2,3,1]) -> [2, 1, 1, 80]
         # [N, C, 1, 1]
-        channel_add_term = self.channel_add_conv(context)
-        x = x + channel_add_term
+        channel_add_term = self.channel_add_conv(context) # channel_add_term = channel_add_conv(context) -> [2, 1, 1, 80]
+        # x = tf.transpose(x, [0, 2,3,1]) -> [2, 256, 256, 80]
+        x = x + channel_add_term # same -> [2, 256, 256, 80]
 
         return x
 
@@ -306,7 +309,7 @@ class MIRNet_v2(nn.Module):
         
 
     def forward(self, inp_img):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         shallow_feats = self.conv_in(inp_img)
         # (Pdb) shallow_feats.size()
         # torch.Size([4, 80, 512, 512])
@@ -335,6 +338,6 @@ model_params['inp_channels'] = 3
 model_params.pop('type')
 print(json.dumps(model_params, indent=4))
 #%%
-sample_input_batch = torch.randn([4, 3, 512, 512])
+sample_input_batch = torch.randn([2, 3, 256, 256])
 model = MIRNet_v2(**model_params)
 output = model(sample_input_batch)

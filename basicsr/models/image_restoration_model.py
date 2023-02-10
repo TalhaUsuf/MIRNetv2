@@ -62,6 +62,9 @@ class ImageCleanModel(BaseModel):
             use_identity     = self.opt['train']['mixing_augs'].get('use_identity', False)
             self.mixing_augmentation = Mixing_Augment(mixup_beta, use_identity, self.device)
 
+        # ============================================================
+        #                    ➡ Here network is defined
+        # ============================================================
         self.net_g = define_network(deepcopy(opt['network_g']))
         self.net_g = self.model_to_device(self.net_g)
         self.print_network(self.net_g)

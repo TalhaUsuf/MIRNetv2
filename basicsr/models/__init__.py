@@ -29,7 +29,7 @@ def create_model(opt):
 
     # dynamic instantiation
     for module in _model_modules:
-        model_cls = getattr(module, model_type, None)
+        model_cls = getattr(module, model_type, None)  # model_type: ImageCleanModel
         if model_cls is not None:
             break
     if model_cls is None:

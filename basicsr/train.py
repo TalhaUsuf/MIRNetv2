@@ -222,6 +222,11 @@ def main():
     scale = opt['scale']
 
     epoch = start_epoch
+    
+    # ============================================================
+    #                  🔴 Main training loop
+    # ============================================================
+    
     while current_iter <= total_iters:
         train_sampler.set_epoch(epoch)
         prefetcher.reset()

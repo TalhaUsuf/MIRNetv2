@@ -50,7 +50,7 @@ datasets:
     io_backend:
       type: disk
 
-# network structures
+# network structures needed by 📃 basicsr/models/__init__.py
 network_g:
   type: MIRNet_v2
   inp_channels: 6
