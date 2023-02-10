@@ -3,7 +3,7 @@
 ## Syed Waqas Zamir, Aditya Arora, Salman Khan, Munawar Hayat, Fahad Shahbaz Khan, Ming-Hsuan Yang, and Ling Shao
 ## IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI)
 ## https://www.waqaszamir.com/publication/zamir-2022-mirnetv2/
-
+#%%
 # --- Imports --- #
 import torch
 import torch.nn as nn
@@ -254,7 +254,26 @@ class RRG(nn.Module):
 
 ##########################################################################
 ##---------- MIRNet  -----------------------
+
+# ============================================================
+#                         ☢ called by basicsr/models/archs/__init__.py L35
+# ============================================================
 class MIRNet_v2(nn.Module):
+    """
+    🔥
+    network_g:
+          type: MIRNet_v2
+          inp_channels: 6
+          out_channels: 3
+          n_feat: 80
+          chan_factor: 1.5
+          n_RRG: 4
+          n_MRB: 2
+          height: 3
+          width: 2
+          scale: 1
+          task: 'defocus_deblurring'
+    """
     def __init__(self,
         inp_channels=3,
         out_channels=3,
@@ -272,7 +291,7 @@ class MIRNet_v2(nn.Module):
 
         kernel_size=3
         self.task = task
-
+        # n_feat ➡ output_channels
         self.conv_in = nn.Conv2d(inp_channels, n_feat, kernel_size=3, padding=1, bias=bias)
 
         modules_body = []
@@ -287,9 +306,13 @@ class MIRNet_v2(nn.Module):
         
 
     def forward(self, inp_img):
+        import pdb; pdb.set_trace()
         shallow_feats = self.conv_in(inp_img)
+        # (Pdb) shallow_feats.size()
+        # torch.Size([4, 80, 512, 512])
         deep_feats = self.body(shallow_feats)
-
+        # (Pdb) deep_feats.size()
+        # torch.Size([4, 80, 512, 512])
         if self.task == 'defocus_deblurring':
             deep_feats += shallow_feats
             out_img = self.conv_out(deep_feats)
@@ -299,3 +322,19 @@ class MIRNet_v2(nn.Module):
             out_img += inp_img
 
         return out_img
+
+#%%
+import yaml
+import json
+with open(r"T:\deblur_tf2_mirnetv2\MIRNetv2\Defocus_Deblurring\Options\DefocusDeblur_DualPixel_16bit_MIRNet_v2.yml", "r") as f:
+    params = yaml.safe_load(f)
+#%%
+model_params = params['network_g']
+model_params['inp_channels'] = 3
+# remove type from model dictionary
+model_params.pop('type')
+print(json.dumps(model_params, indent=4))
+#%%
+sample_input_batch = torch.randn([4, 3, 512, 512])
+model = MIRNet_v2(**model_params)
+output = model(sample_input_batch)

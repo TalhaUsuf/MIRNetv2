@@ -31,8 +31,8 @@ def dynamic_instantiation(modules, cls_type, opt):
         class: Instantiated class.
     """
 
-    for module in modules:
-        cls_ = getattr(module, cls_type, None)
+    for module in modules: # module is basicsr/models/archs/mirnet_v2_arch.py
+        cls_ = getattr(module, cls_type, None) # cls_type is MIRNet_v2
         if cls_ is not None:
             break
     if cls_ is None:
@@ -40,7 +40,24 @@ def dynamic_instantiation(modules, cls_type, opt):
     return cls_(**opt)
 
 
+# ============================================================
+#   ➡ called by basicsr/models/image_restoration_model.py L68
+# ============================================================
 def define_network(opt):
+    """
+    network_g:
+      type: MIRNet_v2
+      inp_channels: 6
+      out_channels: 3
+      n_feat: 80
+      chan_factor: 1.5
+      n_RRG: 4
+      n_MRB: 2
+      height: 3
+      width: 2
+      scale: 1
+      task: 'defocus_deblurring'
+    """
     network_type = opt.pop('type')
     net = dynamic_instantiation(_arch_modules, network_type, opt)
     return net
