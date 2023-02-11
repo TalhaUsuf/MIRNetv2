@@ -93,7 +93,7 @@ class ContextBlock(nn.Module):
 
     def forward(self, x):
         # [N, C, 1, 1]
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         context = self.modeling(x)
         # context = tf.transpose(context, [0, 2,3,1]) -> [2, 1, 1, 80]
         # [N, C, 1, 1]
@@ -122,6 +122,10 @@ class RCB(nn.Module):
         self.gcnet = ContextBlock(n_feat, bias=bias)
 
     def forward(self, x):
+        # x -> [N, H, W, C]
+        import pdb; pdb.set_trace()
+        # feat = tf.shape(x_)[-1]
+        # body = tf.keras.Sequential([tf.keras.layers.Conv2D(feat, 3, 1, padding='same', input_shape=tf.shape(x_)[1:]), tf.keras.layers.LeakyReLU(0.2) ,tf.keras.layers.Conv2D(feat, 3, 1, padding='same')]) -> same shape as x
         res = self.body(x)
         res = self.act(self.gcnet(res))
         res += x
